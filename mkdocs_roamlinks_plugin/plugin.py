@@ -25,7 +25,7 @@ AUTOLINK_RE = r'\[([^\]]+)\]\((([^)/]+\.(md|png|jpg))(#.*)*)\)'
 #       3: alias
 #       4: width
 #       5: height
-ROAMLINK_RE = r"""\[\[(.*?)(\#.*?)?(?:\|([\D][^\|]+[\d]*))?(?:\|(\d+)(?:x(\d+))?)?\]\]"""
+ROAMLINK_RE = r"""\[\[(.*?)(\#.*?)?(?:\|([\D][^\|\]]+[\d]*))?(?:\|(\d+)(?:x(\d+))?)?\]\]"""
 
 class AutoLinkReplacer:
     def __init__(self, base_docs_url, page_url):
