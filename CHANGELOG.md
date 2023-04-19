@@ -1,6 +1,9 @@
 
 # CHANGELOG
 
+## v0.3.2 - 2023-4-19
+- [Fixed strange bug in ROAMLINK_RE which breaks 'alias' match group](https://github.com/Jackiexiao/mkdocs-roamlinks-plugin/pull/9)
+ 
 ## v0.3.0 - 2023-3-29
 - [feat: Added pytest cases, support for image dimensions, and simplified regex](https://github.com/Jackiexiao/mkdocs-roamlinks-plugin/pull/7)
 
