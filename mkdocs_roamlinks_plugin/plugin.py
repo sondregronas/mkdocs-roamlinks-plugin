@@ -5,6 +5,7 @@ import urllib.parse
 
 from mkdocs.plugins import BasePlugin
 import mkdocs.utils
+from mkdocs.config import config_options
 
 log = logging.getLogger(f"mkdocs.plugins.{__name__}")
 log.addFilter(mkdocs.utils.warning_filter)
@@ -184,10 +185,14 @@ def restore_codeblocks(markdown, redacted_blocks):
     """ Restore redacted codeblocks """
     for key, block in redacted_blocks.items():
         markdown = markdown.replace(key, block)
-        
+
     return markdown
 
 class RoamLinksPlugin(BasePlugin):
+    config_scheme = (
+        ('ignore_codeblocks', config_options.Type(bool, default=True)),
+    )
+
     def on_page_markdown(self,
                          markdown,
                          page,
@@ -202,7 +207,9 @@ class RoamLinksPlugin(BasePlugin):
         page_url = page.file.src_path
 
         # Redact codeblocks
-        markdown, redacted_blocks = redact_codeblocks(markdown)
+        redacted_blocks = {}
+        if self.config['ignore_codeblocks']:
+            markdown, redacted_blocks = redact_codeblocks(markdown)
 
         # Look for matches and replace
         markdown = re.sub(AUTOLINK_RE,
@@ -211,6 +218,7 @@ class RoamLinksPlugin(BasePlugin):
                           RoamLinkReplacer(base_docs_url, page_url), markdown)
         
         # Restore codeblocks
-        markdown = restore_codeblocks(markdown, redacted_blocks)
+        if self.config['ignore_codeblocks']:
+            markdown = restore_codeblocks(markdown, redacted_blocks)
 
         return markdown

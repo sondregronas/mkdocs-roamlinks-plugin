@@ -51,8 +51,9 @@ def page(temp_directory):
 
 @pytest.fixture
 def converter(temp_directory, config, site_navigation, page):
-    def c(markdown):
+    def c(markdown, ignore_codeblocks=True):
         plugin = RoamLinksPlugin()
+        plugin.load_config({'ignore_codeblocks': ignore_codeblocks})
         return plugin.on_page_markdown(markdown, page, config, site_navigation)
 
     return c
@@ -97,6 +98,10 @@ def test_converts_link_with_double_quotes_in_text(converter):
 def test_converts_link_with_fragment_identifier(converter):
     assert converter('[[Git Flow#section|Title]]') == '[Title](<../software/git_flow.md#section>)'
 
+###############################################################################{}
+## Code Blocks (ignore_codeblocks=True, default)
+###############################################################################{}
+
 def test_dont_converts_link_inside_inline_code_block(converter):
     input_md = 'Here is a link `[[Git Flow]]` inside code'
     assert converter(input_md) == input_md
@@ -118,6 +123,45 @@ def test_dont_converts_link_inside_fenced_code_block_with_inline_code(converter)
 inside code'''
 
     assert converter(input_md) == input_md
+
+###############################################################################{}
+## Code Blocks (ignore_codeblocks=False)
+###############################################################################{}
+
+def test_converts_link_inside_inline_code_block_when_ignore_false(converter):
+    input_md = 'Here is a link `[[Git Flow]]` inside code'
+    expected = 'Here is a link `[Git Flow](<../software/git_flow.md>)` inside code'
+    assert converter(input_md, ignore_codeblocks=False) == expected
+
+def test_converts_link_inside_fenced_code_block_when_ignore_false(converter):
+    input_md = '''Here is a link
+```
+[[Git Flow]]
+```
+inside code'''
+
+    expected = '''Here is a link
+```
+[Git Flow](<../software/git_flow.md>)
+```
+inside code'''
+
+    assert converter(input_md, ignore_codeblocks=False) == expected
+
+def test_converts_link_inside_fenced_code_block_with_inline_code_when_ignore_false(converter):
+    input_md = '''Here is a link
+```
+`[[Git Flow]]`
+```
+inside code'''
+
+    expected = '''Here is a link
+```
+`[Git Flow](<../software/git_flow.md>)`
+```
+inside code'''
+
+    assert converter(input_md, ignore_codeblocks=False) == expected
 
 ###############################################################################{}
 ## Images
