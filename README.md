@@ -15,6 +15,20 @@ plugins:
   - roamlinks 
 ```
 
+## Configuration
+
+| Option | Default | Description |
+| ------ | ------- | ----------- |
+| `ignore_codeblocks` | `true` | When enabled, links inside code blocks (inline and fenced) are not converted |
+
+Example with configuration:
+```yaml
+plugins:
+  - search
+  - roamlinks:
+      ignore_codeblocks: true
+```
+
 ## Usage
 
 To use this plugin, simply create a link that only contains the filename of file you wish to link to.
