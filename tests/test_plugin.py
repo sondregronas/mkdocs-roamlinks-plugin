@@ -97,6 +97,28 @@ def test_converts_link_with_double_quotes_in_text(converter):
 def test_converts_link_with_fragment_identifier(converter):
     assert converter('[[Git Flow#section|Title]]') == '[Title](<../software/git_flow.md#section>)'
 
+def test_dont_converts_link_inside_inline_code_block(converter):
+    input_md = 'Here is a link `[[Git Flow]]` inside code'
+    assert converter(input_md) == input_md
+
+def test_dont_converts_link_inside_fenced_code_block(converter):
+    input_md = '''Here is a link
+```
+[[Git Flow]]
+```
+inside code'''
+
+    assert converter(input_md) == input_md
+
+def test_dont_converts_link_inside_fenced_code_block_with_inline_code(converter):
+    input_md = '''Here is a link
+```
+`[[Git Flow]]`
+```
+inside code'''
+
+    assert converter(input_md) == input_md
+
 ###############################################################################{}
 ## Images
 ###############################################################################{}

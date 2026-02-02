@@ -27,6 +27,9 @@ AUTOLINK_RE = r'\[([^\]]+)\]\((([^)/]+\.(md|png|jpg))(#.*)*)\)'
 #       5: height
 ROAMLINK_RE = r"""\[\[(.*?)(\#.*?)?(?:\|([\D][^\|\]]+[\d]*))?(?:\|(\d+)(?:x(\d+))?)?\]\]"""
 
+# Regex to match both inline and fenced codeblocks
+CODEBLOCK_RE = r'(```.*?```|`.*?`)'
+
 class AutoLinkReplacer:
     def __init__(self, base_docs_url, page_url):
         self.base_docs_url = base_docs_url
@@ -164,6 +167,25 @@ class RoamLinkReplacer:
 
         return link
 
+def redact_codeblocks(markdown):
+    """ Redact codeblocks to avoid processing links inside codeblocks """
+    codeblock_re = re.compile(CODEBLOCK_RE, re.DOTALL)
+    redacted_blocks = {}
+
+    def replacer(match):
+        key = f"\x01__CODEBLOCK_{len(redacted_blocks)}__\x02"
+        redacted_blocks[key] = match.group(0)
+        return key
+    
+    redacted_markdown = codeblock_re.sub(replacer, markdown)
+    return redacted_markdown, redacted_blocks
+
+def restore_codeblocks(markdown, redacted_blocks):
+    """ Restore redacted codeblocks """
+    for key, block in redacted_blocks.items():
+        markdown = markdown.replace(key, block)
+        
+    return markdown
 
 class RoamLinksPlugin(BasePlugin):
     def on_page_markdown(self,
@@ -179,10 +201,16 @@ class RoamLinksPlugin(BasePlugin):
         # Getting the page url that we are linking from
         page_url = page.file.src_path
 
+        # Redact codeblocks
+        markdown, redacted_blocks = redact_codeblocks(markdown)
+
         # Look for matches and replace
         markdown = re.sub(AUTOLINK_RE,
                           AutoLinkReplacer(base_docs_url, page_url), markdown)
         markdown = re.sub(ROAMLINK_RE,
                           RoamLinkReplacer(base_docs_url, page_url), markdown)
+        
+        # Restore codeblocks
+        markdown = restore_codeblocks(markdown, redacted_blocks)
 
         return markdown
