@@ -17,7 +17,7 @@ log.addFilter(mkdocs.utils.warning_filter)
 #       3: Filename e.g. filename.md
 #       4: File extension e.g. .md, .png, etc.
 #       5. hash anchor e.g. #my-sub-heading-link
-AUTOLINK_RE = r'\[([^\]]+)\]\((([^)/]+\.(md|png|jpg))(#.*)*)\)'
+AUTOLINK_RE = r"\[([^\]]+)\]\((([^)/]+\.(md|png|jpg))(#.*)*)\)"
 
 # For Regex, match groups are:
 #       0: Whole roamlike link e.g. [[filename#title|alias|widthxheight]]
@@ -26,10 +26,13 @@ AUTOLINK_RE = r'\[([^\]]+)\]\((([^)/]+\.(md|png|jpg))(#.*)*)\)'
 #       3: alias
 #       4: width
 #       5: height
-ROAMLINK_RE = r"""\[\[(.*?)(\#.*?)?(?:\|([\D][^\|\]]+[\d]*))?(?:\|(\d+)(?:x(\d+))?)?\]\]"""
+ROAMLINK_RE = (
+    r"""\[\[(.*?)(\#.*?)?(?:\|([\D][^\|\]]+[\d]*))?(?:\|(\d+)(?:x(\d+))?)?\]\]"""
+)
 
 # Regex to match both inline and fenced codeblocks
-CODEBLOCK_RE = r'(```.*?```|`.*?`)'
+CODEBLOCK_RE = r"(```.*?```|`.*?`)"
+
 
 class AutoLinkReplacer:
     def __init__(self, base_docs_url, page_url):
@@ -42,10 +45,11 @@ class AutoLinkReplacer:
 
         # Absolute URL of the linker
         abs_linker_url = os.path.dirname(
-            os.path.join(self.base_docs_url, self.page_url))
+            os.path.join(self.base_docs_url, self.page_url)
+        )
 
         # Find directory URL to target link
-        rel_link_url = ''
+        rel_link_url = ""
         # Walk through all files in docs directory to find a matching file
         for root, dirs, files in os.walk(self.base_docs_url, followlinks=True):
             for name in files:
@@ -55,18 +59,19 @@ class AutoLinkReplacer:
                     abs_link_url = os.path.dirname(os.path.join(root, name))
                     # Constructing relative path from the linker to the link
                     rel_link_url = os.path.join(
-                        os.path.relpath(abs_link_url, abs_linker_url),
-                        filename)
-        if rel_link_url == '':
-            log.warning(f"AutoLinksPlugin unable to find {filename} in directory {self.base_docs_url}")
+                        os.path.relpath(abs_link_url, abs_linker_url), filename
+                    )
+        if rel_link_url == "":
+            log.warning(
+                f"AutoLinksPlugin unable to find {filename} in directory {self.base_docs_url}"
+            )
             return match.group(0)
 
         # Construct the return link by replacing the filename with the relative path to the file
-        if (match.group(5) == None):
+        if match.group(5) == None:
             link = match.group(0).replace(match.group(2), rel_link_url)
         else:
-            link = match.group(0).replace(match.group(2),
-                                          rel_link_url + match.group(5))
+            link = match.group(0).replace(match.group(2), rel_link_url + match.group(5))
         return link
 
 
@@ -76,9 +81,9 @@ class RoamLinkReplacer:
         self.page_url = page_url
 
     def simplify(self, filename):
-        """ ignore - _ and space different, replace .md to '' so it will match .md file,
+        """ignore - _ and space different, replace .md to '' so it will match .md file,
         if you want to link to png, make sure you filename contain suffix .png, same for other files
-        but if you want to link to markdown, you don't need suffix .md """
+        but if you want to link to markdown, you don't need suffix .md"""
         return re.sub(r"[\-_ ]", "", filename.lower()).replace(".md", "")
 
     def gfm_anchor(self, title):
@@ -86,8 +91,8 @@ class RoamLinkReplacer:
         see: https://gist.github.com/asabaylus/3071099#gistcomment-1593627"""
         if title:
             title = title.strip().lower()
-            title = re.sub(r'[^\w\u4e00-\u9fff\- ]', "", title)
-            title = re.sub(r' +', "-", title)
+            title = re.sub(r"[^\w\u4e00-\u9fff\- ]", "", title)
+            title = re.sub(r" +", "-", title)
             return title
         else:
             return ""
@@ -104,45 +109,51 @@ class RoamLinkReplacer:
 
         # Absolute URL of the linker
         abs_linker_url = os.path.dirname(
-            os.path.join(self.base_docs_url, self.page_url))
+            os.path.join(self.base_docs_url, self.page_url)
+        )
 
         # Find directory URL to target link
-        rel_link_url = ''
+        rel_link_url = ""
         # Walk through all files in docs directory to find a matching file
         if filename:
-            if '/' in filename:
-                if 'http' in filename: # http or https
+            if "/" in filename:
+                if "http" in filename:  # http or https
                     rel_link_url = filename
                 else:
                     rel_file = filename
-                    if not '.' in filename:   # don't have extension type
+                    if "." not in filename:  # don't have extension type
                         rel_file = filename + ".md"
 
-                    abs_link_url = os.path.dirname(os.path.join(
-                        self.base_docs_url, rel_file))
+                    abs_link_url = os.path.dirname(
+                        os.path.join(self.base_docs_url, rel_file)
+                    )
                     # Constructing relative path from the linker to the link
                     rel_link_url = os.path.join(
-                            os.path.relpath(abs_link_url, abs_linker_url), os.path.basename(rel_file))
+                        os.path.relpath(abs_link_url, abs_linker_url),
+                        os.path.basename(rel_file),
+                    )
                     if title:
-                        rel_link_url = rel_link_url + '#' + format_title
+                        rel_link_url = rel_link_url + "#" + format_title
             else:
                 for root, dirs, files in os.walk(self.base_docs_url, followlinks=True):
                     for name in files:
                         # If we have a match, create the relative path from linker to the link
                         if self.simplify(name) == self.simplify(filename):
                             # Absolute path to the file we want to link to
-                            abs_link_url = os.path.dirname(os.path.join(
-                                root, name))
+                            abs_link_url = os.path.dirname(os.path.join(root, name))
                             # Constructing relative path from the linker to the link
                             rel_link_url = os.path.join(
-                                    os.path.relpath(abs_link_url, abs_linker_url), name)
+                                os.path.relpath(abs_link_url, abs_linker_url), name
+                            )
                             if title:
-                                rel_link_url = rel_link_url + '#' + format_title
-            if rel_link_url == '':
-                log.warning(f"RoamLinksPlugin unable to find {filename} in directory {self.base_docs_url}")
+                                rel_link_url = rel_link_url + "#" + format_title
+            if rel_link_url == "":
+                log.warning(
+                    f"RoamLinksPlugin unable to find {filename} in directory {self.base_docs_url}"
+                )
                 return whole_link
         else:
-            rel_link_url = '#' + format_title
+            rel_link_url = "#" + format_title
 
         # Construct the return link
         # Windows escapes "\" unintentionally, and it creates incorrect links, so need to replace with "/"
@@ -150,14 +161,14 @@ class RoamLinkReplacer:
 
         if filename:
             if alias:
-                link = f'[{alias}](<{rel_link_url}>)'
+                link = f"[{alias}](<{rel_link_url}>)"
             else:
-                link = f'[{filename+title}](<{rel_link_url}>)'
+                link = f"[{filename+title}](<{rel_link_url}>)"
         else:
             if alias:
-                link = f'[{alias}](<{rel_link_url}>)'
+                link = f"[{alias}](<{rel_link_url}>)"
             else:
-                link = f'[{title}](<{rel_link_url}>)'
+                link = f"[{title}](<{rel_link_url}>)"
 
         if width and not height:
             link = f'{link}{{ width="{width}" }}'
@@ -168,8 +179,9 @@ class RoamLinkReplacer:
 
         return link
 
+
 def redact_codeblocks(markdown):
-    """ Redact codeblocks to avoid processing links inside codeblocks """
+    """Redact codeblocks to avoid processing links inside codeblocks"""
     codeblock_re = re.compile(CODEBLOCK_RE, re.DOTALL)
     redacted_blocks = {}
 
@@ -177,29 +189,23 @@ def redact_codeblocks(markdown):
         key = f"\x01__CODEBLOCK_{len(redacted_blocks)}__\x02"
         redacted_blocks[key] = match.group(0)
         return key
-    
+
     redacted_markdown = codeblock_re.sub(replacer, markdown)
     return redacted_markdown, redacted_blocks
 
+
 def restore_codeblocks(markdown, redacted_blocks):
-    """ Restore redacted codeblocks """
+    """Restore redacted codeblocks"""
     for key, block in redacted_blocks.items():
         markdown = markdown.replace(key, block)
 
     return markdown
 
+
 class RoamLinksPlugin(BasePlugin):
-    config_scheme = (
-        ('ignore_codeblocks', config_options.Type(bool, default=True)),
-    )
+    config_scheme = (("ignore_codeblocks", config_options.Type(bool, default=True)),)
 
-    def on_page_markdown(self,
-                         markdown,
-                         page,
-                         config,
-                         site_navigation=None,
-                         **kwargs):
-
+    def on_page_markdown(self, markdown, page, config, site_navigation=None, **kwargs):
         # Getting the root location of markdown source files
         base_docs_url = config["docs_dir"]
 
@@ -208,17 +214,19 @@ class RoamLinksPlugin(BasePlugin):
 
         # Redact codeblocks
         redacted_blocks = {}
-        if self.config['ignore_codeblocks']:
+        if self.config["ignore_codeblocks"]:
             markdown, redacted_blocks = redact_codeblocks(markdown)
 
         # Look for matches and replace
-        markdown = re.sub(AUTOLINK_RE,
-                          AutoLinkReplacer(base_docs_url, page_url), markdown)
-        markdown = re.sub(ROAMLINK_RE,
-                          RoamLinkReplacer(base_docs_url, page_url), markdown)
-        
+        markdown = re.sub(
+            AUTOLINK_RE, AutoLinkReplacer(base_docs_url, page_url), markdown
+        )
+        markdown = re.sub(
+            ROAMLINK_RE, RoamLinkReplacer(base_docs_url, page_url), markdown
+        )
+
         # Restore codeblocks
-        if self.config['ignore_codeblocks']:
+        if self.config["ignore_codeblocks"]:
             markdown = restore_codeblocks(markdown, redacted_blocks)
 
         return markdown
