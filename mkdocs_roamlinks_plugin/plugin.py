@@ -159,6 +159,10 @@ class RoamLinkReplacer:
         # Windows escapes "\" unintentionally, and it creates incorrect links, so need to replace with "/"
         rel_link_url = rel_link_url.replace("\\", "/")
 
+        # Remove .md suffix for markdown files
+        if rel_link_url.endswith(".md"):
+            rel_link_url = rel_link_url[:-3]
+
         if filename:
             if alias:
                 link = f"[{alias}](<{rel_link_url}>)"
